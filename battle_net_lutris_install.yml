@@ -1,0 +1,133 @@
+name: "Battle.net"
+game_slug: battlenet
+version: "Installer"
+slug: battlenet-installer
+runner: wine
+
+script:
+  files:
+    - setup:
+        filename: Battle.net-Setup.exe
+        url: https://www.battle.net/download/getInstallerForGame?os=win&version=LIVE&gameProgram=BATTLENET_APP
+
+  game:
+    arch: win64
+    exe: drive_c/Program Files (x86)/Battle.net/Battle.net Launcher.exe
+    prefix: $GAMEDIR
+
+  installer:
+    - task:
+        name: create_prefix
+        arch: win64
+        description: Creating 64bit Wine prefix.
+        prefix: $GAMEDIR
+    - task:
+        name: winetricks
+        app: corefonts
+        prefix: $GAMEDIR
+    - task:
+        name: winetricks
+        app: vcrun2010
+        prefix: $GAMEDIR
+    - task:
+        name: winetricks
+        app: vcrun2013
+        prefix: $GAMEDIR
+    - task:
+        name: winetricks
+        app: vcrun2015
+        prefix: $GAMEDIR
+    - task:
+        name: winetricks
+        app: dotnet40
+        prefix: $GAMEDIR
+    - task:
+        name: winetricks
+        app: arial
+        arch: win64
+        description: Installing Arial font
+        prefix: $GAMEDIR
+    - task:
+        name: winetricks
+        app: tahoma
+        arch: win64
+        description: Installing Tahoma font
+        prefix: $GAMEDIR
+    - task:
+        name: set_regedit
+        arch: win64
+        description: Setting Windows 10 mode for Wine
+        path: HKEY_CURRENT_USER\Software\Wine
+        key: Version
+        value: win10
+        prefix: $GAMEDIR
+    - task:
+        name: set_regedit
+        arch: win64
+        description: 'Wine Staging: Enabling DXVA2'
+        path: HKEY_CURRENT_USER\Software\Wine\DXVA2
+        key: backend
+        value: va
+        prefix: $GAMEDIR
+    - task:
+        name: set_regedit
+        arch: win64
+        description: needed for Warcraft III Reforged
+        path: HKEY_CURRENT_USER\Software\Wine\AppDefaults\BlizzardBrowser.exe
+        key: version
+        type: REG_SZ
+        value: win7
+        prefix: $GAMEDIR
+    - write_json:
+        file: $GAMEDIR/drive_c/users/$USER/AppData/Roaming/Battle.net/Battle.net.config
+        data:
+          Client:
+            GameLaunchWindowBehavior: '2'
+            GameSearch:
+              BackgroundSearch: 'true'
+            HardwareAcceleration: 'false'
+            Install:
+              DownloadLimitNextPatchInBps: '0'
+            Sound:
+              Enabled: 'false'
+            Streaming:
+              StreamingEnabled: 'false'
+          Games:
+            s2:
+              AdditionalLaunchArguments: -Displaymode 1
+    - move:
+        src: setup
+        dst: $GAMEDIR/drive_c/
+    - task:
+        name: wineexec
+        executable: $GAMEDIR/drive_c/Battle.net-Setup.exe
+        description: |
+          Installing Blizzard App
+          ------------------------------
+          Do not attempt to login to Battle.net, once Battle.net has finished installing
+          and the login window appears, simply close it. You will log in the next time
+          you start the app.
+        prefix: $GAMEDIR
+        arch: win64
+    - task:
+        name: winekill
+        prefix: $GAMEDIR
+        arch: win64
+        description: Closing remaining Wine processes after installation.
+
+  system:
+    env:
+      DXVK_HUD: compiler
+      DXVK_STATE_CACHE_PATH: $GAMEDIR
+      STAGING_SHARED_MEMORY: 1
+      __GL_SHADER_DISK_CACHE: 1
+      __GL_SHADER_DISK_CACHE_PATH: $GAMEDIR
+      __GL_SHADER_DISK_CACHE_SKIP_CLEANUP: 1
+    exclude_processes: Agent.exe "Battle.net Helper.exe"
+
+  wine:
+    battleye: false
+    eac: false
+    fsr: false
+    overrides:
+      locationapi: d
