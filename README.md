@@ -1,1 +1,1 @@
-# Battle_Net_Lutris_Install
+# lutris_install_bnet

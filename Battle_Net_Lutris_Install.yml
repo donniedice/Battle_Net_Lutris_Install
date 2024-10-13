@@ -1,0 +1,46 @@
+installer:
+  - task:
+      arch: win64
+      description: Creating 64bit Wine prefix.
+      name: create_prefix
+      prefix: $GAMEDIR
+  - task:
+      arch: win64
+      description: Downloading and installing Arial font manually.
+      name: execute
+      prefix: $GAMEDIR
+      command: |
+        mkdir -p "$GAMEDIR/drive_c/windows/Fonts" &&
+        wget -qO- https://raw.githubusercontent.com/pushcx/corefonts/master/arial32.exe | cabextract -q -d "$GAMEDIR/drive_c/windows/Fonts" - &&
+        wget -qO- https://raw.githubusercontent.com/pushcx/corefonts/master/arialb32.exe | cabextract -q -d "$GAMEDIR/drive_c/windows/Fonts" -
+  - task:
+      arch: win64
+      description: Installing Tahoma font
+      name: winetricks
+      app: tahoma
+      prefix: $GAMEDIR
+  - task:
+      arch: win64
+      description: Setting Windows 10 mode for Wine
+      key: Version
+      name: set_regedit
+      path: HKEY_CURRENT_USER\Software\Wine
+      prefix: $GAMEDIR
+      value: win10
+  - task:
+      arch: win64
+      description: 'Wine Staging: Enabling DXVA2'
+      key: backend
+      name: set_regedit
+      path: HKEY_CURRENT_USER\Software\Wine\DXVA2
+      prefix: $GAMEDIR
+      value: va
+  - task:
+      arch: win64
+      description: needed for Warcraft III Reforged
+      key: version
+      name: set_regedit
+      path: HKEY_CURRENT_USER\Software\Wine\AppDefaults\BlizzardBrowser.exe
+      prefix: $GAMEDIR
+      type: REG_SZ
+      value: win7
